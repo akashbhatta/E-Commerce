@@ -4,14 +4,25 @@ export const CartContext = createContext();
 function CartProvider({ children }) {
     const [items,setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [cartItems, setCartItems] = useState([]);
+
+    const [cartItems, setCartItems] = useState(()=>{
+      const savedCart = localStorage.getItem('cartItems');
+      return savedCart ? JSON.parse(savedCart):[];
+    });
 
     function addToCart(product) {
       const exists = cartItems.find (item=> item.id===product.id);
 
       if (exists) return;
-        setCartItems((prev)=>[...prev,product]);
+        // setCartItems((prev)=>[...prev,product]);
+     const updatedCart = [...cartItems, product];
+     setCartItems(updatedCart);
+
+     localStorage.setItem('cartItems', JSON.stringify (updatedCart));
+        
     }
+
+    
 
     function removeFromCart(productId) {
       const currentItems=cartItems;
