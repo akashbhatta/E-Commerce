@@ -17,7 +17,7 @@ function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center mb-3">
-              <div className="w-11 h-11 rounded-full inline-flex items-center justify-center font-bold bg-gradient-to-r from-indigo-500 to-pink-500 text-white shadow">E</div>
+              <div className="w-11 h-11 rounded-full inline-flex items-center justify-center font-bold bg-linear-to-r from-indigo-500 to-pink-500 text-white shadow">E</div>
               <span className="ml-3 font-semibold text-white">Ecommerce</span>
             </Link>
             <p className="text-slate-300 text-sm max-w-sm">
@@ -92,7 +92,7 @@ function Footer() {
                 className="flex-1 min-w-0 px-4 py-3 rounded-full border border-slate-700 bg-slate-800 text-sm placeholder-slate-400 text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
               />
               <button
-                className="mt-2 sm:mt-0 inline-flex items-center px-5 py-3 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-white font-medium shadow-md hover:from-indigo-600 hover:to-pink-600 transition"
+                className="mt-2 sm:mt-0 inline-flex items-center px-5 py-3 rounded-full bg-linear-to-r from-indigo-500 to-pink-500 text-white font-medium shadow-md hover:from-indigo-600 hover:to-pink-600 transition"
                 type="submit"
               >
                 Subscribe

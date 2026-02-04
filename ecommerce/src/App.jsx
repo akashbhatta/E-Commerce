@@ -6,6 +6,7 @@ import NotFound from './pages/NotFound'
 import CartProvider from './context/CartContext'
 import CartPages from './pages/CartPages'
 import Productspage from './pages/Productspage'
+import SingleProduct from './pages/SingleProduct'
 
 function App() {
   return (
@@ -14,10 +15,10 @@ function App() {
       <Route
       path='/'
       element={<MainLayout />}>
-      <Route
-      index element={<Homepage />}/>
-      <Route path='/products' element={<Productspage />}/>
-      <Route path='/cart' element={<CartPages />}/>
+      <Route index element={<Homepage />}/>
+      <Route path='products' element={<Productspage />}/>
+      <Route path='products/:id' element={<SingleProduct />}/>
+      <Route path='cart' element={<CartPages />}/>
      </Route> 
      <Route path="*" element={<NotFound />} />          
 
