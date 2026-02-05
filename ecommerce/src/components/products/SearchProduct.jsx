@@ -4,6 +4,7 @@ function SearchProduct({setSearch}) {
     function onType(event){
         setSearch(event.target.value);
     }
+    
   return (
     <form onSubmit={(e) => e.preventDefault()} className="flex items-center justify-center mb-6">
         <input

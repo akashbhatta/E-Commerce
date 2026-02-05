@@ -24,6 +24,44 @@ function ProductCard({product}) {
  setTimeout(() => setIsAdded(false), 2000)
  }
 
+ // Dynamic rating rendering with proper fallback
+ const renderStars = (rating) => {
+   const stars = [];
+   const fullStars = Math.floor(rating);
+   const hasHalfStar = rating % 1 !== 0;
+   
+   for (let i = 0; i < 5; i++) {
+     if (i < fullStars) {
+       stars.push(<span key={i} className="text-yellow-400 text-lg">★</span>);
+     } else if (i === fullStars && hasHalfStar) {
+       stars.push(<span key={i} className="text-yellow-400 text-lg">⭐</span>);
+     } else {
+       stars.push(<span key={i} className="text-gray-300 text-lg">★</span>);
+     }
+   }
+   return stars;
+ };
+
+ // Get rating - handle different API structures
+ let rating = 0;
+ let reviewCount = 0;
+ 
+ if (product.rating) {
+   if (typeof product.rating === 'object') {
+     rating = product.rating.rate || 0;
+     reviewCount = product.rating.count || 0;
+   } else {
+     rating = parseFloat(product.rating) || 0;
+   }
+ }
+ 
+ // Generate consistent but unique rating per product ID (between 2.5 to 5)
+ if (rating === 0) {
+   const seed = product.id * 7919; // Prime number for better distribution
+   rating = ((seed % 25) / 10) + 2.5; // Range: 2.5 to 5.0
+   reviewCount = Math.floor(((seed * 13) % 200) + 50); // Range: 50 to 250
+ }
+
  return (
  <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 h-full flex flex-col overflow-hidden group cursor-pointer">
  {/* Image */}
@@ -47,10 +85,13 @@ function ProductCard({product}) {
  </h3>
  </div>
 
- {/* Rating */}
- <div className="flex items-center gap-1 mb-3">
- <span className="text-yellow-400 text-sm">⭐⭐⭐⭐⭐</span>
- <span className="text-sm text-gray-600">(128)</span>
+ {/* Dynamic Rating */}
+ <div className="flex items-center gap-2 mb-3">
+ <div className="flex items-center gap-0.5">
+ {renderStars(rating)}
+ </div>
+ <span className="text-sm font-semibold text-gray-700">{rating.toFixed(1)}</span>
+ <span className="text-sm text-gray-500">({reviewCount})</span>
  </div>
 
  {/* Spacer to push price and button to bottom */}
@@ -58,8 +99,8 @@ function ProductCard({product}) {
 
  {/* Price */}
  <div className="flex items-center gap-2 mb-4">
- <p className="text-xl font-bold text-blue-600">${product.price}</p>
- <p className="text-base text-gray-400 line-through">${Math.round(product.price * 1.2)}</p>
+ <p className="text-xl font-bold text-blue-600">${product.price.toFixed(2)}</p>
+ <p className="text-base text-gray-400 line-through">${(product.price * 1.2).toFixed(2)}</p>
  </div>
 
  {/* Button - Always at bottom */}

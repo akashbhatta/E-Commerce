@@ -1,166 +1,128 @@
 import React, { useEffect, useState } from 'react'
 import ProductCard from '../components/products/ProductCard'
+import { useCart } from '../hooks/useCart';
+import categoriesData from '../data/categories';
 import CategoryTab from '../components/products/CategoryTab';
 import SearchProduct from '../components/products/SearchProduct';
+import { useSearchParams } from 'react-router-dom';
+import ProductRange from '../components/products/ProductRange';
+import FilterByRating from '../components/products/FilterByRating';
+
+
+
 export default function Productspage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const [search, setSearch] = useState("");
+  const { items, loading } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [minValue, setMinValue] = useState("");
+  const [maxValue, setMaxValue] = useState("");
+  const [minRating, setMinRating] = useState(0);
+  const [maxRating, setMaxRating] = useState(5);
 
-  console.log("Selected Category:", selectedCategory);
-  console.log("Search Term:", search);
+  console.log("minRating", minRating);
+  console.log("maxRating", maxRating);
 
-  // derive categories from fetched products to ensure exact matches
-  const categories = Array.from(new Set(products.map(p => p.category))).sort();
-
-  const normalizedSelected = selectedCategory.trim().toLowerCase();
-
-  const filteredProducts = products
-    .filter(p => {
-      if (!selectedCategory) return true;
-      return String(p.category).trim().toLowerCase() === normalizedSelected;
-    })
-    .filter(p => {
-      if (!search) return true;
-      const q = search.trim().toLowerCase();
-      return p.title.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q));
-    });
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const response = await fetch('https://fakestoreapi.com/products');
-        const data = await response.json();
-        setProducts(data);
-      }
-      catch(error) {
-        console.error('Error fetching products', error);
-        setError('Failed to load products. Please try again later.');
-      }
-      finally {
-        setLoading(false);
+    if (search) {
+      setSearchParams({ search });
+    } else {
+      setSearchParams({});
+    }
+  }, [search, setSearchParams]);
+
+  const filterItems = items.filter((product) => {
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSearch = product.title.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+  console.log("filtered items", filterItems);
+
+
+  function getProductRating(product) {
+    let rating = 0;
+    if (product.rating) {
+      if (typeof product.rating === 'object') {
+        rating = product.rating.rate || 0;
+      } else {
+        rating = parseFloat(product.rating) || 0;
       }
     }
-    fetchProducts();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-12">
-            <div className="h-10 bg-gray-200 rounded-lg w-64 mx-auto mb-4 animate-pulse"></div>
-            <div className="h-6 bg-gray-200 rounded w-48 mx-auto animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse">
-                <div className="bg-gray-200 h-44 rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    if (rating === 0) {
+      const seed = product.id * 7919;
+      rating = ((seed % 25) / 10) + 2.5; // 2.5 - 5.0
+    }
+    return rating;
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
+  function productRangeFilter(filterItems) {
+    if (!minValue && !maxValue) return filterItems;
+    return filterItems.filter((product) => {
+      const min = minValue ? parseFloat(minValue) : 0;
+      const max = maxValue ? parseFloat(maxValue) : Infinity;
+      return product.price >= min && product.price <= max;
+    });
+  }
+
+  function ratingFilter(items) {
+    const minR = minRating ?? 0;
+    const maxR = maxRating ?? 5;
+    return items.filter(p => {
+      const r = getProductRating(p);
+      return r >= minR && r <= maxR;
+    });
+  }
+
+  const finalFilteredItems = productRangeFilter(filterItems);
+  const finalFilteredItemsWithRating = ratingFilter(finalFilteredItems);
+
+
+  if (loading) {
+    return <div className="text-center py-16">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
             All Products
           </h1>
-          <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
-            Discover our carefully curated collection of premium products
+          
+          <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed mb-6">
+            Discover our curated collection of premium products
           </p>
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <div className="h-1 w-12 bg-blue-600 rounded"></div>
-            <div className="h-1 w-6 bg-purple-600 rounded"></div>
-            <div className="h-1 w-12 bg-blue-600 rounded"></div>
-          </div>
-        </div>
-        <SearchProduct setSearch={setSearch}/>
 
-        <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
-          <button
-            onClick={() => setSelectedCategory("")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === "" ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-          >
-            All
-          </button>
-          {categories.map((category) => (
-            <CategoryTab
-              key={category}
-              categoryName={category}
-              setSelectedCategory={setSelectedCategory}
-              selectedCategory={selectedCategory}
+          <div className="mb-6">
+            <SearchProduct setSearch={setSearch} search={search} />
+            <ProductRange setMaxValue={setMaxValue} setMinValue={setMinValue}/>
+            
+            
+            <FilterByRating setMinRating={setMinRating} setMaxRating={setMaxRating}/>
+
+          </div>
+          
+          <div className="flex flex-wrap justify-center mb-6">
+            <CategoryTab CategoryName="all" key="all" setSelectedCategory={setSelectedCategory} selectedCategory={selectedCategory}/>
+            {
+              categoriesData.map((category) => {
+                return <CategoryTab CategoryName={category} setSelectedCategory={setSelectedCategory} selectedCategory={selectedCategory} key={category}/>;  
+              })
+            }
+          </div>
+          
+          <div className="w-32 h-1 bg-linear-to-r from-blue-500 to-purple-500 mx-auto rounded-full shadow-sm"></div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {finalFilteredItemsWithRating.map((product) => (
+            <ProductCard 
+              key={product.id}
+              product={product}
             />
           ))}
-        </div>
-
-        {/* Products Count */}
-        <div className="mb-8">
-          <p className="text-gray-500 text-center">
-            Showing <span className="font-semibold text-gray-700">{filteredProducts.length}</span> products
-          </p>
-        </div>
-
-
-
-        {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">
-            No products found. Try a different category or search term.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredProducts.map((product, index) => (
-              <div 
-                key={product.id}
-                className="transform transition-all duration-300 hover:scale-105"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <ProductCard product={product} />
-              </div>
-            ))}
-          </div>
-        )}
-
-     
-        {/* Footer Message */}
-        <div className="text-center mt-16 pt-8 border-t border-gray-200">
-          <p className="text-gray-500">
-            Can't find what you're looking for? 
-            <span className="text-blue-600 font-semibold cursor-pointer hover:underline ml-1">
-              Contact us
-            </span>
-          </p>
         </div>
       </div>
     </div>
