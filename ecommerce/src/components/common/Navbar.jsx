@@ -32,8 +32,7 @@ function Navbar() {
           <div className="flex items-center space-x-8">
             <Link 
               to="/" 
-              className="text-gray-700 hover:text-indigo-600 font-semibold transition-colors duration-200 relative group"
-            >
+              className="text-gray-700 hover:text-indigo-600 font-semibold transition-colors duration-200 relative group">
               Home
               <span className="absolute bottom-0 left-0 w-0 h-1 bg-linear-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
@@ -54,6 +53,13 @@ function Navbar() {
                   {cartCount}
                 </span>
               )}
+            </Link>
+
+              <Link 
+              to="/login" 
+              className="text-gray-700 hover:text-indigo-600 font-semibold transition-colors duration-200 relative group">
+              Login
+              <span className="absolute bottom-0 left-0 w-0 h-1 bg-linear-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
           </div>
         </div>
